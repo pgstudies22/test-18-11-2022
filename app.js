@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js'
-import { getFirestore, collection, doc, getDoc, addDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js'
+import { getFirestore, collection, doc, getDoc, addDoc, setDoc, onSnapshot, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js'
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js'
 
 const firebaseConfig = {
@@ -48,10 +48,10 @@ const login = async () => {
   }
 }
 
-const logout = async unsubscribe => {
+const logout = async () => {
   try {
     await signOut(auth)
-    unsubscribe()
+    // unsubscribe()
     console.log('usuário foi deslogado')
   } catch (error) {
     console.log('logout error:', error)
@@ -123,27 +123,34 @@ const handleAuthStateChanged = async user => {
 
   buttonGoogle.removeEventListener('click', login)
   formAddPhrase.onsubmit = e => addPhrase(e, user)
-  const unsubscribe = onSnapshot(collectionPhrases, snapshot => {
-    const documentFragment = document.createDocumentFragment()
 
-    snapshot.docChanges().forEach(docChange => {
-      const liPhrase = document.createElement('li')
-      const movieTitleContainer = document.createElement('div')
-      const phraseContainer = document.createElement('div')
-      const { movieTitle, phrase } = docChange.doc.data()
+  const q = query(collectionPhrases, where('userId', '==', user.uid))
+  const querySnapshot = await getDocs(q)
+  console.log('user', user)
+  querySnapshot.forEach(doc => console.log(doc.data()))
 
-      movieTitleContainer.textContent = DOMPurify.sanitize(movieTitle)
-      phraseContainer.textContent = DOMPurify.sanitize(phrase)
-      movieTitleContainer.setAttribute('class', 'collapsible-header blue-grey-text text-lighten-5 blue-grey darken-4')
-      phraseContainer.setAttribute('class', 'collapsible-body blue-grey-text text-lighten-5 blue-grey darken-3')
+  // const unsubscribe = onSnapshot(collectionPhrases, snapshot => {
+  //   const documentFragment = document.createDocumentFragment()
 
-      liPhrase.append(movieTitleContainer, phraseContainer)
-      documentFragment.append(liPhrase)
-    })
+  //   snapshot.docChanges().forEach(docChange => {
+  //     const liPhrase = document.createElement('li')
+  //     const movieTitleContainer = document.createElement('div')
+  //     const phraseContainer = document.createElement('div')
+  //     const { movieTitle, phrase } = docChange.doc.data()
 
-    phrasesList.append(documentFragment)
-  })
-  linkLogout.onclick = () => logout(unsubscribe)
+  //     movieTitleContainer.textContent = DOMPurify.sanitize(movieTitle)
+  //     phraseContainer.textContent = DOMPurify.sanitize(phrase)
+  //     movieTitleContainer.setAttribute('class', 'collapsible-header blue-grey-text text-lighten-5 blue-grey darken-4')
+  //     phraseContainer.setAttribute('class', 'collapsible-body blue-grey-text text-lighten-5 blue-grey darken-3')
+
+  //     liPhrase.append(movieTitleContainer, phraseContainer)
+  //     documentFragment.append(liPhrase)
+  //   })
+
+  //   phrasesList.append(documentFragment)
+  // })
+  // linkLogout.onclick = () => logout(unsubscribe)
+  linkLogout.onclick = logout
   initCollapsibles(phrasesList)
   accountDetails.textContent = DOMPurify.sanitize(`${user.displayName} | ${user.email}`)
   accountDetailsContainer.append(accountDetails)
