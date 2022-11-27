@@ -157,5 +157,4 @@ const initModals = () => {
 }
 
 onAuthStateChanged(auth, handleAuthStateChanged)
-
 initModals()
