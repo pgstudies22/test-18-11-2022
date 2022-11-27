@@ -46,7 +46,7 @@ const login = async () => {
   }
 }
 
-const logout = async () => {
+const logout = async unsubscribe => {
   try {
     await signOut(auth)
     unsubscribe()
