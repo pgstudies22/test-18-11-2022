@@ -20,13 +20,11 @@ const addPhrase = async (e, user) => {
   e.preventDefault()
 
   try {
-    const addedDoc = await addDoc(collectionPhrases, {
+    await addDoc(collectionPhrases, {
       movieTitle: DOMPurify.sanitize(e.target.title.value), 
       phrase: DOMPurify.sanitize(e.target.phrase.value),
-      userId: user.uid
+      userId: DOMPurify.sanitize(user.uid)
     })
-
-    console.log('Document adicionado com o ID:', addedDoc.id)
 
     e.target.reset()
 
@@ -51,7 +49,7 @@ const login = async () => {
 const logout = async () => {
   try {
     await signOut(auth)
-    // unsubscribe()
+    unsubscribe()
     console.log('usuário foi deslogado')
   } catch (error) {
     console.log('logout error:', error)
@@ -124,33 +122,30 @@ const handleAuthStateChanged = async user => {
   buttonGoogle.removeEventListener('click', login)
   formAddPhrase.onsubmit = e => addPhrase(e, user)
 
-  const q = query(collectionPhrases, where('userId', '==', user.uid))
-  const querySnapshot = await getDocs(q)
-  console.log('user', user)
-  querySnapshot.forEach(doc => console.log(doc.data()))
+  const queryPhrases = query(collectionPhrases, where('userId', '==', user.uid))
 
-  // const unsubscribe = onSnapshot(collectionPhrases, snapshot => {
-  //   const documentFragment = document.createDocumentFragment()
+  const unsubscribe = onSnapshot(queryPhrases, snapshot => {
+    const documentFragment = document.createDocumentFragment()
 
-  //   snapshot.docChanges().forEach(docChange => {
-  //     const liPhrase = document.createElement('li')
-  //     const movieTitleContainer = document.createElement('div')
-  //     const phraseContainer = document.createElement('div')
-  //     const { movieTitle, phrase } = docChange.doc.data()
+    snapshot.docChanges().forEach(docChange => {
+      const liPhrase = document.createElement('li')
+      const movieTitleContainer = document.createElement('div')
+      const phraseContainer = document.createElement('div')
+      const { movieTitle, phrase } = docChange.doc.data()
 
-  //     movieTitleContainer.textContent = DOMPurify.sanitize(movieTitle)
-  //     phraseContainer.textContent = DOMPurify.sanitize(phrase)
-  //     movieTitleContainer.setAttribute('class', 'collapsible-header blue-grey-text text-lighten-5 blue-grey darken-4')
-  //     phraseContainer.setAttribute('class', 'collapsible-body blue-grey-text text-lighten-5 blue-grey darken-3')
+      movieTitleContainer.textContent = DOMPurify.sanitize(movieTitle)
+      phraseContainer.textContent = DOMPurify.sanitize(phrase)
+      movieTitleContainer.setAttribute('class', 'collapsible-header blue-grey-text text-lighten-5 blue-grey darken-4')
+      phraseContainer.setAttribute('class', 'collapsible-body blue-grey-text text-lighten-5 blue-grey darken-3')
 
-  //     liPhrase.append(movieTitleContainer, phraseContainer)
-  //     documentFragment.append(liPhrase)
-  //   })
+      liPhrase.append(movieTitleContainer, phraseContainer)
+      documentFragment.append(liPhrase)
+    })
 
-  //   phrasesList.append(documentFragment)
-  // })
-  // linkLogout.onclick = () => logout(unsubscribe)
-  linkLogout.onclick = logout
+    phrasesList.append(documentFragment)
+  })
+
+  linkLogout.onclick = () => logout(unsubscribe)
   initCollapsibles(phrasesList)
   accountDetails.textContent = DOMPurify.sanitize(`${user.displayName} | ${user.email}`)
   accountDetailsContainer.append(accountDetails)
