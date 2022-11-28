@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js'
-import { getFirestore, collection, doc, getDoc, addDoc, setDoc, onSnapshot, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js'
+import { getFirestore, collection, doc, getDoc, addDoc, setDoc, onSnapshot, query, where } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js'
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js'
 
 const firebaseConfig = {
@@ -84,7 +84,16 @@ const handleLoginMessage = () => document
   .querySelector('[data-js="login-message"]')
   ?.remove()
 
-const handleAnonymousUser = ({ formAddPhrase, linkLogout, buttonGoogle, phrasesList, accountDetailsContainer }) => {
+const getElements = () => ({
+  formAddPhrase: document.querySelector('[data-js="add-phrase-form"]'),
+  phrasesList: document.querySelector('[data-js="phrases-list"]'),
+  buttonGoogle: document.querySelector('[data-js="button-google"]'),
+  linkLogout: document.querySelector('[data-js="logout"]'),
+  accountDetailsContainer: document.querySelector('[data-js="account-details"]'),
+  accountDetails: document.createElement('p')
+})
+
+const handleAnonymousUser = () => {
   const phrasesContainer = document.querySelector('[data-js="phrases-container"]')
   const loginMessage = document.createElement('h5')
 
@@ -92,6 +101,8 @@ const handleAnonymousUser = ({ formAddPhrase, linkLogout, buttonGoogle, phrasesL
   loginMessage.classList.add('center-align', 'white-text')
   loginMessage.setAttribute('data-js', 'login-message')
   phrasesContainer.append(loginMessage)
+
+  const { formAddPhrase, linkLogout, buttonGoogle, phrasesList, accountDetailsContainer } = getElements()
 
   formAddPhrase.removeEventListener('submit', addPhrase)
   formAddPhrase.onsubmit = null
@@ -102,20 +113,20 @@ const handleAnonymousUser = ({ formAddPhrase, linkLogout, buttonGoogle, phrasesL
 }
 
 const createUserDoc = async user => {
+  // const collectionPhrases = collection(db, 'phrases')
+  // const queryUser = query(collection(db, 'users'), where('userId', '==', user.uid))
   const userDocRef = doc(db, 'users', user.uid)
   const docSnapshot = await getDoc(userDocRef)
-  
-  if (docSnapshot.exists()) {
-    return
-  }
 
-  try {
-    await setDoc(userDocRef, {
-      name: DOMPurify.sanitize(user.displayName),
-      email: DOMPurify.sanitize(user.email)
-    })
-  } catch (error) {
-    console.log('Erro ao tentar registrar usuário no collection users:', error)
+  if (!docSnapshot.exists()) {
+    try {
+      await setDoc(userDocRef, {
+        name: DOMPurify.sanitize(user.displayName),
+        email: DOMPurify.sanitize(user.email)
+      })
+    } catch (error) {
+      console.log('Erro ao tentar registrar usuário no collection users:', error)
+    }
   }
 }
 
@@ -143,14 +154,16 @@ const renderPhrases = ({ user, phrasesList }) => {
   })
 }
 
-const handleSignedUser = async ({ user, formAddPhrase, phrasesList, buttonGoogle, linkLogout, accountDetailsContainer, accountDetails }) => {
+const handleSignedUser = async user => {
+  const { formAddPhrase, phrasesList, buttonGoogle, linkLogout, accountDetailsContainer, accountDetails } = getElements()
+  
   createUserDoc(user)
   buttonGoogle.removeEventListener('click', login)
   formAddPhrase.onsubmit = e => addPhrase(e, user)
 
   const unsubscribe = renderPhrases({ user, phrasesList })
-  linkLogout.onclick = () => logout(unsubscribe)
   
+  linkLogout.onclick = () => logout(unsubscribe)
   initCollapsibles(phrasesList)
   accountDetails.textContent = DOMPurify.sanitize(`${user.displayName} | ${user.email}`)
   accountDetailsContainer.append(accountDetails)
@@ -161,20 +174,11 @@ const handleAuthStateChanged = async user => {
   renderLinks(user)
   handleLoginMessage()
 
-  const elements = {
-    formAddPhrase: document.querySelector('[data-js="add-phrase-form"]'),
-    phrasesList: document.querySelector('[data-js="phrases-list"]'),
-    buttonGoogle: document.querySelector('[data-js="button-google"]'),
-    linkLogout: document.querySelector('[data-js="logout"]'),
-    accountDetailsContainer: document.querySelector('[data-js="account-details"]'),
-    accountDetails: document.createElement('p')
-  }
-
   if (!user) {
-    return handleAnonymousUser(elements)
+    return handleAnonymousUser()
   }
 
-  handleSignedUser({ user, ...elements })
+  handleSignedUser(user)
 }
 
 const initModals = () => {
