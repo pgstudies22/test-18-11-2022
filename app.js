@@ -2,6 +2,13 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase
 import { getFirestore, collection, doc, getDoc, addDoc, setDoc, onSnapshot, query, where } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js'
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js'
 
+const formAddPhrase = document.querySelector('[data-js="add-phrase-form"]')
+const phrasesList = document.querySelector('[data-js="phrases-list"]')
+const buttonGoogle = document.querySelector('[data-js="button-google"]')
+const linkLogout = document.querySelector('[data-js="logout"]')
+const accountDetailsContainer = document.querySelector('[data-js="account-details"]')
+const accountDetails = document.createElement('p')
+
 const firebaseConfig = {
   apiKey: "AIzaSyB3g4WRjt8GfXDRzFJgA0L6ygMCxpTQsqo",
   authDomain: "test-18-11-2022-6f253.firebaseapp.com",
@@ -84,15 +91,6 @@ const handleLoginMessage = () => document
   .querySelector('[data-js="login-message"]')
   ?.remove()
 
-const getElements = () => ({
-  formAddPhrase: document.querySelector('[data-js="add-phrase-form"]'),
-  phrasesList: document.querySelector('[data-js="phrases-list"]'),
-  buttonGoogle: document.querySelector('[data-js="button-google"]'),
-  linkLogout: document.querySelector('[data-js="logout"]'),
-  accountDetailsContainer: document.querySelector('[data-js="account-details"]'),
-  accountDetails: document.createElement('p')
-})
-
 const handleAnonymousUser = () => {
   const phrasesContainer = document.querySelector('[data-js="phrases-container"]')
   const loginMessage = document.createElement('h5')
@@ -101,8 +99,6 @@ const handleAnonymousUser = () => {
   loginMessage.classList.add('center-align', 'white-text')
   loginMessage.setAttribute('data-js', 'login-message')
   phrasesContainer.append(loginMessage)
-
-  const { formAddPhrase, linkLogout, buttonGoogle, phrasesList, accountDetailsContainer } = getElements()
 
   formAddPhrase.removeEventListener('submit', addPhrase)
   formAddPhrase.onsubmit = null
@@ -113,8 +109,6 @@ const handleAnonymousUser = () => {
 }
 
 const createUserDoc = async user => {
-  // const collectionPhrases = collection(db, 'phrases')
-  // const queryUser = query(collection(db, 'users'), where('userId', '==', user.uid))
   const userDocRef = doc(db, 'users', user.uid)
   const docSnapshot = await getDoc(userDocRef)
 
@@ -155,8 +149,6 @@ const renderPhrases = ({ user, phrasesList }) => {
 }
 
 const handleSignedUser = async user => {
-  const { formAddPhrase, phrasesList, buttonGoogle, linkLogout, accountDetailsContainer, accountDetails } = getElements()
-  
   createUserDoc(user)
   buttonGoogle.removeEventListener('click', login)
   formAddPhrase.onsubmit = e => addPhrase(e, user)
