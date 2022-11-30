@@ -109,9 +109,10 @@ const handleAnonymousUser = () => {
 }
 
 const createUserDoc = async user => {
-  const userDocRef = doc(db, 'users', user.uid)
-  const docSnapshot = await getDoc(userDocRef)
-
+  // const userDocRef = doc(db, 'users', user.uid)
+  // const docSnapshot = await getDoc(userDocRef)
+  const docSnapshot = await getDoc(collection(db, 'users'), user.uid)
+  
   if (!docSnapshot.exists()) {
     try {
       await setDoc(userDocRef, {
