@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js'
-import { getFirestore, collection, doc, getDoc, addDoc, setDoc, onSnapshot, query, where } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js'
+import { getFirestore, collection, getDoc, doc, addDoc, setDoc, onSnapshot, query, where } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js'
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js'
 
 const formAddPhrase = document.querySelector('[data-js="add-phrase-form"]')
@@ -109,15 +109,15 @@ const handleAnonymousUser = () => {
 }
 
 const createUserDoc = async user => {
-  // const userDocRef = doc(db, 'users', user.uid)
-  // const docSnapshot = await getDoc(userDocRef)
-  const docSnapshot = await getDoc(collection(db, 'users'), user.uid)
+  const userDocRef = doc(db, 'users', user.uid)
+  const docSnapshot = await getDoc(userDocRef)
   
   if (!docSnapshot.exists()) {
     try {
       await setDoc(userDocRef, {
         name: DOMPurify.sanitize(user.displayName),
-        email: DOMPurify.sanitize(user.email)
+        email: DOMPurify.sanitize(user.email),
+        userId: DOMPurify.sanitize(user.uid)
       })
     } catch (error) {
       console.log('Erro ao tentar registrar usuário no collection users:', error)
